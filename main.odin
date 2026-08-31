@@ -7,6 +7,7 @@ import "core:fmt"
 
 import "parser"
 import "utils"
+import "exec"
 
 
 main :: proc() {
@@ -19,11 +20,34 @@ main :: proc() {
         }
         tokens := parser.parse(line)
         defer delete(tokens)
-        fmt.println(tokens[:])
+        
+        err = execute(tokens[:])
+        if err != nil {
+            fmt.println("\ntrsh:", err)
+            continue
+        }
+
     }
 }
 
-// ok so they're a bug inside of that code and i need to figure it out
+execute :: proc(tokens: []parser.Token) -> os.Error {
+    if len(tokens) == 0 {
+        return nil
+    }
+    cmd := tokens[0].content
+    dirs := exec.get_all_directories_from_env()
+    args := get_parsed_args(tokens[:])
+    defer delete(args)
+    
+    command_path, err := exec.find_command_path(cmd, dirs)
+    if err != nil {
+        return err
+    }
+
+    exec.run_command(command_path, args[:])
+    return nil
+}
+
 read_line :: proc () -> (string, os.Error) {
     buf: [1024]byte
 
@@ -46,4 +70,22 @@ read_line :: proc () -> (string, os.Error) {
     raw_line := utils.builder_to_string(&line_builder)
     line := strings.trim_space(raw_line)
     return line, nil
+}
+
+
+get_parsed_args :: proc(tokens: []parser.Token) -> [dynamic]string {
+    if len(tokens) < 2 {
+        return {}
+    }
+
+    args: [dynamic]string 
+
+    for i := 1; i < len(tokens); i += 1 {
+        current_token := tokens[i]
+        if current_token.kind != .Word {
+            continue
+        }
+        append(&args, current_token.content)
+    }
+    return args
 }
