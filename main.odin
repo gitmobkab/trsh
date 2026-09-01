@@ -15,7 +15,6 @@ main :: proc() {
         fmt.print("TRSH > ")
         line, err := read_line()
         if err != nil {
-            fmt.println("\ntrsh:", err)
             break
         }
         tokens := parser.parse(line)
@@ -23,7 +22,7 @@ main :: proc() {
         
         err = execute(tokens[:])
         if err != nil {
-            fmt.println("\ntrsh:", err)
+            fmt.println("trsh:", err)
             continue
         }
 
