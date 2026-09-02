@@ -1,20 +1,31 @@
 package main
 
+import "base:runtime"
+import "core:sys/posix"
 import "core:io"
 import "core:strings"
 import "core:os"
 import "core:fmt"
 
+import "signals"
 import "parser"
 import "utils"
 import "exec"
 
+PROMPT :: "TRSH > "
 
 main :: proc() {
+
+    signals.ignore_sigint()
+
+
     for {
-        fmt.print("TRSH > ")
+        fmt.print(PROMPT)
         line, err := read_line()
         if err != nil {
+            if posix.get_errno() == .EINTR {
+                continue
+            }
             break
         }
         tokens := parser.parse(line)
@@ -34,8 +45,13 @@ execute :: proc(tokens: []parser.Token) -> os.Error {
         return nil
     }
     cmd := tokens[0].content
-    dirs := exec.get_all_directories_from_env()
     args := get_parsed_args(tokens[:])
+
+    if exec.find_and_exec_builtin(cmd, args[:]) {
+        return nil
+    }
+
+    dirs := exec.get_all_directories_from_env()
     defer delete(args)
     
     command_path, err := exec.find_command_path(cmd, dirs)
