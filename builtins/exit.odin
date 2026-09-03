@@ -2,6 +2,7 @@ package builtins
 
 import "core:os"
 
-exit :: proc(_: []string) {
-    os.exit(0)
+exit :: proc(current_state: ^Shell_state, _: []string) -> os.Error {
+    current_state.should_exit = true
+    return nil
 }
