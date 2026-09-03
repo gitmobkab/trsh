@@ -1,5 +1,9 @@
 package parser
 
+SINGLE_QUOTE :: '\''
+DOUBLE_QUOTE :: '"'
+ESCAPE_CHAR :: '\\'
+
 Token :: struct {
     kind: Token_Kind,
     content: string,
@@ -15,5 +19,4 @@ Token_Kind :: enum i8 {
     Redirect_Out,
     Redirect_Append,
     Background,
-
 }
