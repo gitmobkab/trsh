@@ -7,6 +7,7 @@ import "core:strings"
 import "core:os"
 import "core:fmt"
 
+import "builtins"
 import "signals"
 import "parser"
 import "utils"
@@ -17,9 +18,13 @@ PROMPT :: "TRSH > "
 main :: proc() {
 
     signals.ignore_sigint()
+    shell_state, err := builtins.init_shell_state()
+    if err != nil {
+        fmt.println(err)
+        return
+    }
 
-
-    for {
+    for !shell_state.should_exit {
         fmt.print(PROMPT)
         line, err := read_line()
         if err != nil {
@@ -31,7 +36,7 @@ main :: proc() {
         tokens := parser.parse(line)
         defer delete(tokens)
         
-        err = execute(tokens[:])
+        err = execute(tokens[:], &shell_state)
         if err != nil {
             fmt.println("trsh:", err)
             continue
@@ -40,26 +45,26 @@ main :: proc() {
     }
 }
 
-execute :: proc(tokens: []parser.Token) -> os.Error {
+execute :: proc(tokens: []parser.Token, current_state: ^builtins.Shell_state) -> os.Error {
     if len(tokens) == 0 {
         return nil
     }
     cmd := tokens[0].content
     args := get_parsed_args(tokens[:])
 
-    if exec.find_and_exec_builtin(cmd, args[:]) {
-        return nil
-    }
-
-    dirs := exec.get_all_directories_from_env()
-    defer delete(args)
-    
-    command_path, err := exec.find_command_path(cmd, dirs)
-    if err != nil {
+    if found, err := exec.find_and_exec_builtin(cmd, args[:], current_state); found {
         return err
     }
 
-    exec.run_command(command_path, args[:])
+
+    dirs := exec.get_all_directories_from_env()
+    defer delete(args)
+    if command_path, err := exec.find_command_path(cmd, dirs); err != nil {
+        return err
+    } else {
+        exec.run_command(command_path, args[:])
+    }
+
     return nil
 }
 
