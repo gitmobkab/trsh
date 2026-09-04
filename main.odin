@@ -9,7 +9,7 @@ import "core:fmt"
 
 import "builtins"
 import "signals"
-import "parser"
+import "lexer"
 import "utils"
 import "exec"
 
@@ -33,7 +33,7 @@ main :: proc() {
             }
             break
         }
-        tokens := parser.parse(line)
+        tokens := lexer.parse(line)
         defer delete(tokens)
         
         err = execute(tokens[:], &shell_state)
@@ -45,7 +45,7 @@ main :: proc() {
     }
 }
 
-execute :: proc(tokens: []parser.Token, current_state: ^builtins.Shell_state) -> os.Error {
+execute :: proc(tokens: []lexer.Token, current_state: ^builtins.Shell_state) -> os.Error {
     if len(tokens) == 0 {
         return nil
     }
@@ -93,7 +93,7 @@ read_line :: proc () -> (string, os.Error) {
 }
 
 
-get_parsed_args :: proc(tokens: []parser.Token) -> [dynamic]string {
+get_parsed_args :: proc(tokens: []lexer.Token) -> [dynamic]string {
     if len(tokens) < 2 {
         return {}
     }
