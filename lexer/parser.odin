@@ -57,9 +57,18 @@ tokenize :: proc(s: string) -> (_tokens: [dynamic]Token, _incomplete: bool ){
     if builder_not_empty(&current_word) {
         flush_word(&tokens, &current_word)
     }
+    incomplete = is_lexically_incomplete(tokens[:])
     return tokens, incomplete
 }
 
+is_lexically_incomplete :: proc(tokens: []Token) -> bool {
+    if len(tokens) == 0 {
+        return false
+    }
+    
+    last_token := tokens[len(tokens) - 1]
+    return utils.contains(last_token.kind, ..INCOMPLETE_TERMINATORS)
+}
 
 handle_quote_char :: proc(char: rune, runes: []rune, start: int) -> (string, int) {
     if char == SINGLE_QUOTE {
