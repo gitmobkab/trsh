@@ -33,7 +33,7 @@ main :: proc() {
             }
             break
         }
-        tokens := lexer.parse(line)
+        tokens := lexer.tokenize(line)
         defer delete(tokens)
         
         err = execute(tokens[:], &shell_state)

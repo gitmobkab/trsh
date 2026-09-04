@@ -3,7 +3,6 @@ package parser
 
 import "core:unicode/utf8"
 import "core:strings"
-import "core:fmt"
 
 import "../utils"
 
@@ -15,7 +14,7 @@ operator_token_map := map[rune]Token_Kind{
     '&' = .Background
 }
 
-parse :: proc(s: string) -> [dynamic]Token {
+tokenize :: proc(s: string) -> [dynamic]Token {
     tokens: [dynamic]Token
 
     current_word := strings.builder_make()
