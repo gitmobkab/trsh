@@ -3,12 +3,6 @@ package parser
 SINGLE_QUOTE :: '\''
 DOUBLE_QUOTE :: '"'
 ESCAPE_CHAR :: '\\'
-INCOMPLETE_TERMINATORS := []Token_Kind{
-    .Pipe,
-    .Redirect_In,
-    .Redirect_Out,
-    .Redirect_Append
-}
 
 Token :: struct {
     kind: Token_Kind,
