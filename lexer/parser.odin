@@ -14,8 +14,9 @@ operator_token_map := map[rune]Token_Kind{
     '&' = .Background
 }
 
-tokenize :: proc(s: string) -> [dynamic]Token {
+tokenize :: proc(s: string) -> (_tokens: [dynamic]Token, _incomplete: bool ){
     tokens: [dynamic]Token
+    incomplete := true
 
     current_word := strings.builder_make()
     defer strings.builder_destroy(&current_word)
@@ -48,6 +49,7 @@ tokenize :: proc(s: string) -> [dynamic]Token {
         }
 
         if cursor == int(Token_Kind.Incomplete) {
+            incomplete = true
             break
         } 
         cursor += 1
@@ -55,10 +57,7 @@ tokenize :: proc(s: string) -> [dynamic]Token {
     if builder_not_empty(&current_word) {
         flush_word(&tokens, &current_word)
     }
-    if cursor == int(Token_Kind.Incomplete) {
-        mark_incomplete(&tokens)
-    }
-    return tokens
+    return tokens, incomplete
 }
 
 
@@ -68,7 +67,7 @@ handle_quote_char :: proc(char: rune, runes: []rune, start: int) -> (string, int
     } else if char == DOUBLE_QUOTE {
         return parse_double_quote(runes, start)
     } else {
-        return "", int(Token_Kind.None) // need changes
+        return "", int(Token_Kind.None) // need changes (maybe)
     }
 }
 
