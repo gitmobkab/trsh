@@ -16,7 +16,7 @@ operator_token_map := map[rune]Token_Kind{
 
 tokenize :: proc(s: string) -> (_tokens: [dynamic]Token, _incomplete: bool ){
     tokens: [dynamic]Token
-    incomplete := true
+    incomplete := false
 
     current_word := strings.builder_make()
     defer strings.builder_destroy(&current_word)
