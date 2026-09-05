@@ -14,8 +14,9 @@ operator_token_map := map[rune]Token_Kind{
     '&' = .Background
 }
 
-tokenize :: proc(s: string) -> (_tokens: [dynamic]Token){
+tokenize :: proc(s: string) -> (_tokens: []Token){
     tokens: [dynamic]Token
+    defer delete(tokens)
 
     current_word := strings.builder_make()
     defer strings.builder_destroy(&current_word)
@@ -55,7 +56,7 @@ tokenize :: proc(s: string) -> (_tokens: [dynamic]Token){
     if builder_not_empty(&current_word) {
         flush_word(&tokens, &current_word)
     }
-    return tokens
+    return utils.snapshot_dynamic_array(Token, tokens)
 }
 
 
