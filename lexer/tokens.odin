@@ -1,8 +1,14 @@
-package parser
+package lexer
 
 SINGLE_QUOTE :: '\''
 DOUBLE_QUOTE :: '"'
 ESCAPE_CHAR :: '\\'
+
+REDIRECT_TOKEN_KINDS := []Token_Kind{
+    .Redirect_In,
+    .Redirect_Out,
+    .Redirect_Append
+}
 
 Token :: struct {
     kind: Token_Kind,
