@@ -1,5 +1,5 @@
 #+feature dynamic-literals
-package parser
+package lexer
 
 import "core:unicode/utf8"
 import "core:strings"
