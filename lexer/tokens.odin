@@ -10,6 +10,11 @@ REDIRECT_TOKEN_KINDS := []Token_Kind{
     .Redirect_Append
 }
 
+PIPELINE_SEPARATORS := []Token_Kind{
+    .Semicolon,
+    .Background
+}
+
 Token :: struct {
     kind: Token_Kind,
     content: string,
