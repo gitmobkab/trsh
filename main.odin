@@ -29,8 +29,8 @@ main :: proc() {
         tokens := lexer.tokenize(line)
         pipelines, parse_error := parser.parse(tokens[:])
         fmt.println(pipelines[:])
-        if parse_error != {} {
-            fmt.println("parse error:", parse_error)
+        if parse_error != nil {
+            fmt.println("trsh:", parser.get_error_msg(parse_error))
         }
     }
 }
