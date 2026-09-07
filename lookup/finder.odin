@@ -14,7 +14,7 @@ find_builtin :: proc(name: string) -> (builtin_cmd: builtins.builtin_cmd, found:
 
 find_command_path_from_env :: proc(command_name: string, env_key: string = "PATH", split_on: string = ":") -> (_abs_path: string, _err: os.Error) {
     dirs: []string
-    if strings.starts_with(LOCAL_COMMAND_PREFIX, command_name) {
+    if strings.starts_with(command_name, LOCAL_COMMAND_PREFIX) {
         cwd, err := os.get_working_directory(context.allocator)
         if err != nil {
             return "", err
