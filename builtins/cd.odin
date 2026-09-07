@@ -4,11 +4,11 @@ import "core:os"
 import "core:fmt"
 
 cd :: proc(current_state: ^Shell_state, args: []string) -> os.Error {
-    if len(args) < 1 {
+    if len(args) < 2 {
         fmt.println("Missing operand <path>")
         return nil
     }
-    target, err := os.get_absolute_path(args[0], context.allocator)
+    target, err := os.get_absolute_path(args[1], context.allocator)
     if err != nil {
         return err
     }
