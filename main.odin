@@ -8,6 +8,7 @@ import "signals"
 import "reader"
 import "parser"
 import "lexer"
+import "exec"
 
 PROMPT :: "TRSH > "
 
@@ -21,16 +22,33 @@ main :: proc() {
     }
 
     for !shell_state.should_exit {
-        fmt.print(PROMPT)
-        line, err := reader.read_line()
-        if err != nil {
+        if shell_iteration(&shell_state) != nil {
             break
         }
-        tokens := lexer.tokenize(line)
-        pipelines, parse_error := parser.parse(tokens[:])
-        fmt.println(pipelines[:])
-        if parse_error != nil {
-            fmt.println("trsh:", parser.get_error_msg(parse_error))
-        }
     }
+}
+
+shell_iteration :: proc(shell_state: ^builtins.Shell_state) -> os.Error {
+    fmt.print(PROMPT)
+    line, err := reader.read_line()
+    if err != nil {
+        return err
+    }
+    tokens := lexer.tokenize(line)
+    defer delete(tokens)
+
+    pipelines, parse_error := parser.parse(tokens[:])
+    defer delete(pipelines)
+    if parse_error != nil {
+        fmt.println("trsh:", parser.get_error_msg(parse_error))
+        return nil
+    }
+    errs := exec.exec_pipepilines(pipelines, shell_state)
+    defer delete(errs)
+
+    if len(errs) > 0 {
+        fmt.println("MAIN:",errs)
+        return nil
+    }
+    return nil
 }
