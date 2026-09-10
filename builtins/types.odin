@@ -1,7 +1,9 @@
 package builtins
 
-import "core:strings"
+
 import "core:os"
+
+import "../utils"
 
 // forget my previous comment...
 builtin_cmd :: #type proc(current_state: ^Shell_state, args: []string) -> os.Error
@@ -29,18 +31,8 @@ init_shell_state :: proc() -> (Shell_state, os.Error) {
     if environ, err := os.environ(context.allocator); err != nil{
         return {}, err
     } else {
-        populate_env(&state.public_env, environ)
+        utils.populate_env(&state.public_env, environ)
     }
 
     return state, nil
-}
-
-populate_env :: proc(env_store: ^map[string]string, environ: []string) {
-    for env_pair in environ {
-        parts := strings.split(env_pair, "=")
-        name := parts[0]
-        value := parts[1]
-        env_store[name] = value
-    }
-
 }
