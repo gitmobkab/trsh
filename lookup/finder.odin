@@ -3,12 +3,13 @@ package lookup
 import "core:os"
 import "core:strings"
 
-import "../builtins"
+import "../models"
+import "../registry"
 
 LOCAL_COMMAND_PREFIX :: "./"
 
-find_builtin :: proc(name: string) -> (builtin_cmd: builtins.builtin_cmd, found: bool) {
-    builtin_proc, builtin_found := builtins.BUILTINS[name]
+find_builtin :: proc(name: string) -> (_proc: models.builtin_proc, _found: bool) {
+    builtin_proc, builtin_found := registry.registry[name]
     return builtin_proc, builtin_found
 }
 

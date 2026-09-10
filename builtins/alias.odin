@@ -3,7 +3,10 @@ package builtins
 import "core:fmt"
 import "core:os"
 
-alias :: proc(current_state: ^Shell_state, _: []string) -> os.Error {
+import "../models"
+import "../registry"
+
+alias :: proc(current_state: ^models.Shell_state, _: []string) -> os.Error {
     if len(current_state.aliases) == 0 {
         fmt.println("No alias defined :)")
         return nil
@@ -13,4 +16,9 @@ alias :: proc(current_state: ^Shell_state, _: []string) -> os.Error {
         fmt.printfln("%s=%s", alias_name, alias_value)
     }
     return nil
+}
+
+@(init)
+register_alias :: proc "contextless"() {
+    registry.registry["alias"] = alias
 }

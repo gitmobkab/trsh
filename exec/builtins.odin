@@ -1,8 +1,8 @@
 package exec
 
 import "core:os"
-import "../builtins"
+import "../models"
 
-exec_builtin :: proc(builtin_cmd: builtins.builtin_cmd, args: []string, current_state: ^builtins.Shell_state) -> os.Error {
-    return builtin_cmd(current_state, args)
+exec_builtin :: proc(builtin_proc: models.builtin_proc, args: []string, current_state: ^models.Shell_state) -> os.Error {
+    return builtin_proc(current_state, args)
 }

@@ -1,12 +1,8 @@
-package builtins
-
+package models
 
 import "core:os"
 
 import "../utils"
-
-// forget my previous comment...
-builtin_cmd :: #type proc(current_state: ^Shell_state, args: []string) -> os.Error
 
 Shell_state :: struct {
     cwd: string,

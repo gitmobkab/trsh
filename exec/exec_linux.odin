@@ -4,13 +4,13 @@ import "core:sys/posix"
 import "core:os"
 
 import "../parser"
-import "../builtins"
+import "../models"
 import "../lookup"
 import "../utils"
 
 SKIP_FILENO :: -1
 
-exec_pipepilines :: proc(pipelines: []parser.Pipeline, shell_state: ^builtins.Shell_state) -> []Error {
+exec_pipepilines :: proc(pipelines: []parser.Pipeline, shell_state: ^models.Shell_state) -> []Error {
     errs: [dynamic]Error
     defer delete(errs)
     for pipeline in pipelines {
@@ -22,12 +22,12 @@ exec_pipepilines :: proc(pipelines: []parser.Pipeline, shell_state: ^builtins.Sh
     return utils.snapshot_dynamic_array(Error, errs)
 }
 
-exec_pipeline :: proc(pipeline: parser.Pipeline, shell_state: ^builtins.Shell_state) -> []Error {
+exec_pipeline :: proc(pipeline: parser.Pipeline, shell_state: ^models.Shell_state) -> []Error {
     return exec_commands(pipeline.commands, shell_state)
 }
 
 
-exec_commands :: proc(commands: []parser.Parsed_Command, shell_state: ^builtins.Shell_state) -> []Error {
+exec_commands :: proc(commands: []parser.Parsed_Command, shell_state: ^models.Shell_state) -> []Error {
     pipes, pipe_errors := init_pipes(len(commands) - 1)
     if len(pipe_errors) > 0 {
         return pipe_errors
@@ -69,7 +69,7 @@ exec_commands :: proc(commands: []parser.Parsed_Command, shell_state: ^builtins.
 
 exec_command :: proc(
     command: parser.Parsed_Command,
-    shell_state: ^builtins.Shell_state,
+    shell_state: ^models.Shell_state,
     io: Command_IO,
 ) -> (_pid: posix.pid_t, _errs: []Error) {
 

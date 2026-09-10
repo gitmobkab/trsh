@@ -3,7 +3,8 @@ package main
 import "core:os"
 import "core:fmt"
 
-import "builtins"
+import _ "builtins" // only for the @(init) side effects
+import "models"
 import "signals"
 import "reader"
 import "parser"
@@ -15,7 +16,7 @@ PROMPT :: "TRSH > "
 main :: proc() {
 
     signals.ignore_sigint()
-    shell_state, err := builtins.init_shell_state()
+    shell_state, err := models.init_shell_state()
     if err != nil {
         fmt.println(err)
         return
@@ -28,7 +29,7 @@ main :: proc() {
     }
 }
 
-shell_iteration :: proc(shell_state: ^builtins.Shell_state) -> os.Error {
+shell_iteration :: proc(shell_state: ^models.Shell_state) -> os.Error {
     fmt.print(PROMPT)
     line, err := reader.read_line()
     if err != nil {
