@@ -1,5 +1,6 @@
 package exec
 
+import "core:fmt"
 import "core:sys/posix"
 import "core:os"
 
@@ -60,7 +61,7 @@ exec_commands :: proc(commands: []parser.Parsed_Command, shell_state: ^models.Sh
         posix.waitpid(pid, &global_stat_loc, {.UNTRACED})
     }
 
-    for pipe in pipes {
+    for pipe, i in pipes {
         close_pipe(pipe)
     }
 
@@ -84,9 +85,9 @@ exec_command :: proc(
     cmd_pid: posix.pid_t = -1
     switch found_command.kind{
         case .Builtin:
-            err := exec_builtin(found_command.builtin_proc, command.argv, shell_state)
-            if err != nil {
-                append(&errs, err)
+            err := exec_builtin(found_command.builtin_proc, command.argv, shell_state, io, command.redirects)
+            if len(err) > 0 {
+                append(&errs, ..err)
             }
         case .External:
             environ := utils.env_store_to_environ(shell_state.public_env)

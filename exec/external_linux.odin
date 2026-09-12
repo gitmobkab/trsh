@@ -13,7 +13,7 @@ exec_external :: proc(
     envp: []string,
     io: Command_IO,
     redirects: []parser.Redirect,
-) -> (_pid: posix.pid_t, _errs:[]Error) {
+) -> (_pid: posix.pid_t, _errs: []Error) {
 
     fds, errs := setup_redirects(redirects)
     defer delete(fds)
