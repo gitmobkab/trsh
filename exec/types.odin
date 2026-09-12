@@ -8,7 +8,6 @@ Process_Pipe :: struct {
     writer: posix.FD
 }
 
-
 Command_FD :: struct {
     old_fd: posix.FD,
     new_fd: posix.FD,

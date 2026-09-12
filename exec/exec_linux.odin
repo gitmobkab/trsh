@@ -8,7 +8,6 @@ import "../models"
 import "../lookup"
 import "../utils"
 
-SKIP_FILENO :: -1
 
 exec_pipepilines :: proc(pipelines: []parser.Pipeline, shell_state: ^models.Shell_state) -> []Error {
     errs: [dynamic]Error
