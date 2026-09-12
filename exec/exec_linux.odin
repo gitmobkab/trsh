@@ -36,25 +36,13 @@ exec_commands :: proc(commands: []parser.Parsed_Command, shell_state: ^models.Sh
     errs: [dynamic]Error
     defer delete(errs)
 
-    pids := make([]posix.pid_t, len(commands))
+    pids, collect_errs := collect_pids(commands, pipes, shell_state)
     defer delete(pids)
-    for command, i in commands {
-        command_io := Command_IO{SKIP_FILENO, SKIP_FILENO}        
-
-        if i > 0 {
-            command_io.stdin_source = pipes[i - 1].reader
-        }
-        if i < len(commands) - 1 {
-            command_io.stdout_target = pipes[i].writer
-        }
-
-        pid, exec_errs := exec_command(command, shell_state, command_io)
-        if len(exec_errs) > 0 || pid == -1{
-            append(&errs, ..exec_errs)
-        } else {
-            pids[i] = pid
-        }
+    defer delete(collect_errs)
+    if len(collect_errs) > 0 {
+        append(&errs, ..collect_errs)
     }
+
     // don't intend on using it right now
     global_stat_loc: i32
     for pid in pids {
@@ -71,7 +59,7 @@ exec_commands :: proc(commands: []parser.Parsed_Command, shell_state: ^models.Sh
 exec_command :: proc(
     command: parser.Parsed_Command,
     shell_state: ^models.Shell_state,
-    io: Command_IO,
+    command_fds: []Command_FD,
 ) -> (_pid: posix.pid_t, _errs: []Error) {
 
     found_command, search_err := lookup.search_command(command.argv[0])
@@ -85,13 +73,13 @@ exec_command :: proc(
     cmd_pid: posix.pid_t = -1
     switch found_command.kind{
         case .Builtin:
-            err := exec_builtin(found_command.builtin_proc, command.argv, shell_state, io, command.redirects)
+            err := exec_builtin(found_command.builtin_proc, command.argv, shell_state, command_fds, command.redirects)
             if len(err) > 0 {
                 append(&errs, ..err)
             }
         case .External:
             environ := utils.env_store_to_environ(shell_state.public_env)
-            pid, exec_errs := exec_external(found_command.path, command.argv, environ, io, command.redirects)
+            pid, exec_errs := exec_external(found_command.path, command.argv, environ, command_fds, command.redirects)
             if len(exec_errs) > 0 || pid == -1 {
                 append(&errs, ..exec_errs)
             } else {
@@ -99,4 +87,34 @@ exec_command :: proc(
             }
     }
     return cmd_pid, utils.snapshot_dynamic_array(Error, errs)
+}
+
+collect_pids :: proc(
+    commands: []parser.Parsed_Command, 
+    pipes: []Process_Pipe, 
+    shell_state: ^models.Shell_state
+) -> (_pids: []posix.pid_t, _errs: []Error) {
+
+    errs: [dynamic]Error
+    pids := make([]posix.pid_t, len(commands))
+    defer delete(errs)
+
+    for command, i in commands {
+        command_fds := default_command_fds()
+
+        if i > 0 {
+            command_fds[0].old_fd = pipes[i - 1].reader
+        }
+        if i < len(commands) - 1 {
+            command_fds[1].old_fd = pipes[i].writer
+        }
+
+        pid, exec_errs := exec_command(command, shell_state, command_fds)
+        if len(exec_errs) > 0 || pid == -1{
+            append(&errs, ..exec_errs)
+        } else {
+            pids[i] = pid
+        }
+    }
+    return pids, utils.snapshot_dynamic_array(Error, errs)
 }

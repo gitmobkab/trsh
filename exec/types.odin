@@ -9,9 +9,17 @@ Process_Pipe :: struct {
 }
 
 
-Command_IO :: struct {
-    stdin_source: posix.FD,
-    stdout_target: posix.FD,
+Command_FD :: struct {
+    old_fd: posix.FD,
+    new_fd: posix.FD,
+}
+
+default_command_fds :: proc() -> []Command_FD {
+    fds := []Command_FD{
+        {SKIP_FILENO, posix.STDIN_FILENO},
+        {SKIP_FILENO, posix.STDOUT_FILENO}
+    }
+    return fds
 }
 
 Error :: union  {
