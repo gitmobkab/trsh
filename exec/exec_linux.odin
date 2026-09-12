@@ -65,10 +65,10 @@ exec_command :: proc(
     defer delete(errs)
     if search_err != nil {
         append(&errs, search_err)
-        return -1, utils.snapshot_dynamic_array(Error, errs)
+        return BAD_PID, utils.snapshot_dynamic_array(Error, errs)
     }
 
-    cmd_pid: posix.pid_t = -1
+    cmd_pid: posix.pid_t = BAD_PID
     switch found_command.kind{
         case .Builtin:
             err := exec_builtin(found_command.builtin_proc, command.argv, shell_state, command_fds, command.redirects)
@@ -78,7 +78,7 @@ exec_command :: proc(
         case .External:
             environ := utils.env_store_to_environ(shell_state.public_env)
             pid, exec_errs := exec_external(found_command.path, command.argv, environ, command_fds, command.redirects)
-            if len(exec_errs) > 0 || pid == -1 {
+            if len(exec_errs) > 0 || pid == BAD_PID {
                 append(&errs, ..exec_errs)
             } else {
                 cmd_pid = pid
@@ -108,7 +108,7 @@ collect_pids :: proc(
         }
 
         pid, exec_errs := exec_command(command, shell_state, command_fds)
-        if len(exec_errs) > 0 || pid == -1{
+        if len(exec_errs) > 0 || pid == BAD_PID {
             append(&errs, ..exec_errs)
         } else {
             pids[i] = pid

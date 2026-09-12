@@ -22,7 +22,7 @@ exec_external :: proc(
     } 
     pid := posix.fork()
     switch pid {
-        case -1:
+        case BAD_PID:
             err := posix.errno()
             errors: [dynamic]Error
             append(&errors, err)
