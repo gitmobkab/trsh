@@ -1,5 +1,6 @@
 package exec
 
+import "core:c"
 import "core:sys/posix"
 import "core:os"
 
@@ -7,24 +8,16 @@ import "../models"
 import "../parser"
 import "../utils"
 
-FDS_TO_SAVE :: []posix.FD{
-    posix.STDIN_FILENO,
-    posix.STDOUT_FILENO,
-    // posix.STDERR_FILENO
-}
-
 
 exec_builtin :: proc(
     builtin_proc: models.builtin_proc,
     args: []string,
     current_state: ^models.Shell_state,
-    command_fds: []Command_FD,
+    command_io: Command_IO,
     redirects: []parser.Redirect
 ) -> []Error {
     
-
-    saved_fds := save_command_fds()
-    defer delete(saved_fds)
+    saved_io := save_current_io()
     fds, errs := setup_redirects(redirects)
     defer delete(fds)
     if len(errs) > 0 {
@@ -33,7 +26,7 @@ exec_builtin :: proc(
     dup_redirects(redirects, fds)
 
     exec_errs: [dynamic]Error
-    setup_process_io(command_fds)
+    setup_process_io(command_io)
     dup_redirects(redirects, fds)
 
     err := builtin_proc(current_state, args)
@@ -42,18 +35,16 @@ exec_builtin :: proc(
     }
     
     // restore saved fildes
-    setup_process_io(saved_fds)
+    setup_process_io(saved_io)
 
     return utils.snapshot_dynamic_array(Error, exec_errs)
 }
 
-save_command_fds :: proc() -> []Command_FD {
+save_current_io :: proc() -> Command_IO {
+    
+    current_io := default_command_io()
+    current_io.stdin_source = posix.dup(posix.STDIN_FILENO)
+    current_io.stdout_target = posix.dup(posix.STDOUT_FILENO)
 
-    saved_fds := make([]Command_FD, len(FDS_TO_SAVE))
-    for fd_to_save, i in FDS_TO_SAVE{
-        saved_fds[i].old_fd = posix.dup(fd_to_save)
-        saved_fds[i].new_fd = fd_to_save
-    }
-
-    return saved_fds
+    return current_io
 }

@@ -57,7 +57,7 @@ exec_commands :: proc(commands: []parser.Parsed_Command, shell_state: ^models.Sh
 exec_command :: proc(
     command: parser.Parsed_Command,
     shell_state: ^models.Shell_state,
-    command_fds: []Command_FD,
+    command_io: Command_IO,
 ) -> (_pid: posix.pid_t, _errs: []Error) {
 
     found_command, search_err := lookup.search_command(command.argv[0])
@@ -71,13 +71,13 @@ exec_command :: proc(
     cmd_pid: posix.pid_t = BAD_PID
     switch found_command.kind{
         case .Builtin:
-            err := exec_builtin(found_command.builtin_proc, command.argv, shell_state, command_fds, command.redirects)
+            err := exec_builtin(found_command.builtin_proc, command.argv, shell_state, command_io, command.redirects)
             if len(err) > 0 {
                 append(&errs, ..err)
             }
         case .External:
             environ := utils.env_store_to_environ(shell_state.public_env)
-            pid, exec_errs := exec_external(found_command.path, command.argv, environ, command_fds, command.redirects)
+            pid, exec_errs := exec_external(found_command.path, command.argv, environ, command_io, command.redirects)
             if len(exec_errs) > 0 || pid == BAD_PID {
                 append(&errs, ..exec_errs)
             } else {
@@ -98,16 +98,16 @@ collect_pids :: proc(
     defer delete(errs)
 
     for command, i in commands {
-        command_fds := default_command_fds()
+        command_io := default_command_io()
 
         if i > 0 {
-            command_fds[0].old_fd = pipes[i - 1].reader
+            command_io.stdin_source = pipes[i - 1].reader
         }
         if i < len(commands) - 1 {
-            command_fds[1].old_fd = pipes[i].writer
+            command_io.stdout_target = pipes[i].writer
         }
 
-        pid, exec_errs := exec_command(command, shell_state, command_fds)
+        pid, exec_errs := exec_command(command, shell_state, command_io)
         if len(exec_errs) > 0 || pid == BAD_PID {
             append(&errs, ..exec_errs)
         } else {

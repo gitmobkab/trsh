@@ -11,7 +11,7 @@ exec_external :: proc(
     command_path: string,
     argv: []string,
     envp: []string,
-    command_fds: []Command_FD,
+    command_io: Command_IO,
     redirects: []parser.Redirect,
 ) -> (_pid: posix.pid_t, _errs: []Error) {
 
@@ -28,7 +28,7 @@ exec_external :: proc(
             append(&errors, err)
             return -1, utils.snapshot_dynamic_array(Error, errors)
         case 0:
-            setup_process_io(command_fds)
+            setup_process_io(command_io)
             dup_redirects(redirects, fds)
             signals.default_sigint()
 
@@ -42,13 +42,16 @@ exec_external :: proc(
     return pid, errs
 }
 
-setup_process_io :: proc(command_fds: []Command_FD) {
-    for command_fd in command_fds {
-        if command_fd.old_fd != SKIP_FILENO {
-            posix.dup2(command_fd.old_fd, command_fd.new_fd)
-            posix.close(command_fd.old_fd)
-        }
+setup_process_io :: proc(command_io: Command_IO) {
+    if command_io.stdin_source != SKIP_FILENO {
+        posix.dup2(command_io.stdin_source, posix.STDIN_FILENO)
+        posix.close(command_io.stdin_source)
     }
+    if command_io.stdout_target != SKIP_FILENO {
+        posix.dup2(command_io.stdout_target, posix.STDOUT_FILENO)
+        posix.close(command_io.stdout_target)
+    }
+
 }
 
 setup_redirects :: proc(redirects: []parser.Redirect) -> (_fds: []posix.FD, _errors: []Error) {
