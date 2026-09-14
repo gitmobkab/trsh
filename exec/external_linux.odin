@@ -38,6 +38,8 @@ exec_external :: proc(
             posix.execve(path, c_argv, c_envp)
             
             posix.exit(1) // shouldn't happen, just a safe guard
+        case :
+            close_command_io(command_io)
     }
     return pid, errs
 }
@@ -45,13 +47,17 @@ exec_external :: proc(
 setup_process_io :: proc(command_io: Command_IO) {
     if command_io.stdin_source != SKIP_FILENO {
         posix.dup2(command_io.stdin_source, posix.STDIN_FILENO)
-        posix.close(command_io.stdin_source)
     }
     if command_io.stdout_target != SKIP_FILENO {
         posix.dup2(command_io.stdout_target, posix.STDOUT_FILENO)
-        posix.close(command_io.stdout_target)
     }
 
+    close_command_io(command_io)
+}
+
+close_command_io :: proc(command_io: Command_IO) {
+    posix.close(command_io.stdin_source)
+    posix.close(command_io.stdout_target)
 }
 
 setup_redirects :: proc(redirects: []parser.Redirect) -> (_fds: []posix.FD, _errors: []Error) {
